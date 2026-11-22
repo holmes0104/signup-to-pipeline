@@ -3,137 +3,141 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>From sign-up to pipeline · a working prototype by Thanh Nguyen (Holmes)</title>
-<meta name="description" content="A working prototype of lifecycle marketing automation for a weather API business: a step-by-step replay across Segment, Customer.io, Salesforce and attribution, plus a pre-send campaign checker.">
+<title>Sign-up to pipeline · prototype by Thanh Nguyen (Holmes)</title>
+<meta name="description" content="A working prototype: a lifecycle replay across Segment, Customer.io, Salesforce and attribution, and a pre-send campaign checker. Fictional data.">
 <meta name="robots" content="noindex">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,500..800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<div class="wrap">
 
-<header class="top">
-  <p class="eyebrow">Working prototype · by Thanh Nguyen (Holmes)</p>
-  <h1>From sign&#8209;up to pipeline</h1>
-  <p class="lede">How one person moves through a weather API company's marketing stack, and how I check a campaign before it goes out. Made for my application to the Marketing Automation and Technology Specialist role at Vaisala Xweather.</p>
-  <ul class="facts">
-    <li><b>1 · Lifecycle replay (simulated).</b> Pick a person. See the event data, the Customer.io automation, the Salesforce record and the attribution change at each step.</li>
-    <li><b>2 · Preflight checker.</b> A pre-send QA tool that runs in your browser. It opens on a campaign with planted errors.</li>
-  </ul>
-  <p class="disclaimer">Fictional people, companies and numbers. Not connected to, or endorsed by, Vaisala or Xweather. The free tier (15,000 accesses a month) and the €300 subscription come from xweather.com's public pricing page, checked 21 November 2026.</p>
+<header class="bar">
+  <div class="bar-in">
+    <a class="brand" href="#replay" aria-label="Sign-up to pipeline, home">
+      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M3 18 L9 12 L13 15 L21 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="3" cy="18" r="2" fill="currentColor"/><circle cx="21" cy="6" r="2.4" fill="currentColor"/></svg>
+      <h1>Sign‑up to pipeline</h1>
+    </a>
+    <nav class="tabs" role="tablist" aria-label="Tools">
+      <a role="tab" href="#replay" id="tab-replay" aria-controls="view-replay">Lifecycle replay</a>
+      <a role="tab" href="#preflight" id="tab-preflight" aria-controls="view-preflight">Preflight checker</a>
+    </nav>
+    <a class="by" href="https://holmesnguyen.info">Thanh Nguyen (Holmes)</a>
+  </div>
 </header>
 
-<section id="replay" aria-labelledby="replay-h">
-  <div class="sec-head">
-    <p class="eyebrow">Part 1</p>
-    <h2 id="replay-h">Lifecycle replay</h2>
-    <p class="sub">Each step shows what is sent, what each tool does with it, and what could break. Use the arrows or the step list.</p>
+<main>
+
+<!-- REPLAY -->
+<section id="view-replay" class="view" role="tabpanel" aria-labelledby="tab-replay">
+  <div class="row-top">
+    <div class="seg people" role="radiogroup" aria-label="Person" id="people"></div>
+    <div class="player">
+      <button type="button" class="icon" id="prev" aria-label="Previous step"><svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M12.5 4 6.5 10l6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <button type="button" class="play" id="play" aria-label="Play"><span id="play-ico"></span><span id="play-txt">Play</span></button>
+      <button type="button" class="icon" id="next" aria-label="Next step"><svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M7.5 4l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    </div>
   </div>
 
-  <div class="people" role="tablist" aria-label="Choose a person" id="people"></div>
+  <ol class="journey" id="journey" aria-label="Steps"></ol>
 
-  <div class="stage">
-    <div class="strip" id="strip" aria-hidden="true"></div>
-
-    <div class="stepbar">
-      <button type="button" id="prev" aria-label="Previous step">←</button>
-      <div class="stepinfo" aria-live="polite"><span id="stepday" class="day"></span><h3 id="steptitle"></h3><p id="stepwhat"></p></div>
-      <button type="button" id="next" aria-label="Next step">→</button>
+  <div class="card stage">
+    <div class="step-head" aria-live="polite">
+      <div>
+        <p class="day" id="stepday"></p>
+        <h2 id="steptitle"></h2>
+        <p class="what" id="stepwhat"></p>
+      </div>
+      <div class="flow" id="flow" aria-label="Systems involved in this step"></div>
     </div>
-    <ol class="dots" id="dots" aria-label="Steps"></ol>
-    <p class="auto" id="auto"></p>
 
     <div class="panels">
-      <article class="panel"><h4>Data sent <span class="tool">Segment calls · tracking-plan names</span></h4><pre id="p-event"></pre></article>
-      <article class="panel"><h4>Customer.io</h4><div id="p-cio"></div></article>
-      <article class="panel"><h4>Salesforce <span class="tool">via the team's sync</span></h4><div id="p-sf"></div></article>
-      <article class="panel why"><h4>What could break, or why it matters</h4><div id="p-why"></div></article>
+      <article class="panel"><header><h3>Segment</h3></header><pre id="p-event"></pre></article>
+      <article class="panel"><header><h3>Customer.io</h3></header><div id="p-cio"></div></article>
+      <article class="panel" id="sf-panel"><header><h3>Salesforce</h3><span id="sf-tool"></span></header><div id="p-sf"></div></article>
     </div>
 
-    <div class="attr" id="attr" hidden>
-      <h3>Who gets credit for the deal?</h3>
-      <p class="sub" id="attr-sub"></p>
-      <div class="models" role="radiogroup" aria-label="Attribution model" id="models"></div>
-      <div id="attr-bars"></div>
-      <p class="note" id="attr-note"></p>
+    <p class="watch" id="p-why"></p>
+  </div>
+
+  <div class="card attr" id="attr" hidden>
+    <div class="attr-head">
+      <div><h3 id="attr-title">Who gets credit</h3><p class="what" id="attr-sub"></p></div>
+      <div class="seg small" role="radiogroup" aria-label="Attribution model" id="models"></div>
     </div>
+    <div id="attr-bars"></div>
+    <p class="what" id="attr-note"></p>
   </div>
 </section>
 
-<section id="preflight" aria-labelledby="pf-h">
-  <div class="sec-head">
-    <p class="eyebrow">Part 2</p>
-    <h2 id="pf-h">Preflight checker</h2>
-    <p class="sub">The checks I would run before any send, built as a tool the whole team can use. It reads the campaign set-up and the tracking plan, then tests every message. It opens on a campaign with planted errors. Edit the HTML or the subject and run it again.</p>
-  </div>
-
-  <div class="pf-controls">
-    <label for="pf-campaign">Campaign</label>
-    <select id="pf-campaign">
-      <option value="broken-example">Broken example (planted errors)</option>
-      <option value="webinar-nurture">Webinar nurture (4 emails)</option>
-    </select>
-    <label for="pf-message">Message</label>
-    <select id="pf-message"></select>
-    <button type="button" id="pf-run" class="primary">Run checks</button>
-    <button type="button" id="pf-reset">Reset edits</button>
+<!-- PREFLIGHT -->
+<section id="view-preflight" class="view" role="tabpanel" aria-labelledby="tab-preflight" hidden>
+  <div class="row-top">
+    <div class="seg" role="radiogroup" aria-label="Campaign" id="pf-campaigns">
+      <button type="button" role="radio" data-c="broken-example" aria-checked="true">Broken example</button>
+      <button type="button" role="radio" data-c="webinar-nurture" aria-checked="false">Webinar nurture</button>
+    </div>
+    <div class="pf-tools">
+      <label class="sr" for="pf-message">Message</label>
+      <select id="pf-message"></select>
+      <button type="button" id="pf-reset">Reset</button>
+    </div>
   </div>
 
   <div class="pf-grid">
-    <div class="pf-edit">
-      <label for="pf-subject">Subject</label>
-      <input id="pf-subject" type="text" spellcheck="false">
-      <label for="pf-html">Email HTML</label>
-      <textarea id="pf-html" spellcheck="false" rows="14"></textarea>
-      <details class="pf-preview"><summary>Preview with example data</summary><iframe id="pf-frame" title="Email preview" sandbox=""></iframe></details>
-    </div>
-    <div class="pf-report">
-      <div class="counts" id="pf-counts"></div>
-      <div class="filters" role="group" aria-label="Filter results">
-        <button type="button" data-f="all" aria-pressed="true">All</button>
-        <button type="button" data-f="FAIL" aria-pressed="false">Fail</button>
-        <button type="button" data-f="WARN" aria-pressed="false">Warn</button>
-        <button type="button" data-f="PASS" aria-pressed="false">Pass</button>
+    <div class="card pf-edit">
+      <label class="field"><span>Subject</span><input id="pf-subject" type="text" spellcheck="false"></label>
+      <div class="ed-tabs" role="tablist" aria-label="Email view">
+        <button type="button" role="tab" data-v="preview" aria-selected="true">Preview</button>
+        <button type="button" role="tab" data-v="html" aria-selected="false">Edit HTML</button>
+        <span class="live" id="pf-live"><i></i>Live check</span>
       </div>
-      <div class="tbl"><table><thead><tr><th>Result</th><th>Where</th><th>Check</th></tr></thead><tbody id="pf-rows"></tbody></table></div>
-      <p class="note">Needs a person, not this script: tone and claims, whether the segment matches the intent, send time, rendering in real inboxes, and sign-off from the campaign owner. Link status checks run in the command-line version only.</p>
+      <div class="ed-body">
+        <iframe id="pf-frame" title="Email preview" sandbox=""></iframe>
+        <textarea id="pf-html" spellcheck="false" aria-label="Email HTML" hidden></textarea>
+      </div>
+    </div>
+
+    <div class="card pf-report">
+      <h2 id="pf-verdict"></h2>
+      <div class="seg small filters" role="radiogroup" aria-label="Filter results" id="pf-filters"></div>
+      <ul class="results" id="pf-rows"></ul>
     </div>
   </div>
 
-  <div class="dns">
-    <h3>Sending domain check</h3>
-    <p class="sub">Looks up SPF, DMARC and a DKIM selector over DNS-over-HTTPS (dns.google). Only the domain name is sent.</p>
-    <form id="dns-form" class="pf-controls">
-      <label for="dns-domain">Domain</label><input id="dns-domain" type="text" value="praised.co" spellcheck="false" autocomplete="off">
-      <label for="dns-sel">DKIM selector</label><input id="dns-sel" type="text" value="resend" spellcheck="false" autocomplete="off">
-      <button type="submit" class="primary">Check domain</button>
-    </form>
-    <div class="tbl"><table><tbody id="dns-rows"><tr><td colspan="2" class="muted">Run a check to see results. praised.co is my own project's domain.</td></tr></tbody></table></div>
-  </div>
+  <form class="card dns" id="dns-form">
+    <h3>Sending domain</h3>
+    <label class="field"><span>Domain</span><input id="dns-domain" type="text" value="praised.co" spellcheck="false" autocomplete="off"></label>
+    <label class="field narrow"><span>DKIM selector</span><input id="dns-sel" type="text" value="resend" spellcheck="false" autocomplete="off"></label>
+    <button type="submit" class="primary">Check</button>
+    <ul class="results inline" id="dns-rows"></ul>
+  </form>
 </section>
 
-<section id="notes" aria-labelledby="notes-h">
-  <div class="sec-head">
-    <p class="eyebrow">Behind it</p>
-    <h2 id="notes-h">The working files</h2>
-  </div>
-  <div class="cards">
-    <a class="card" href="https://github.com/holmes0104/signup-to-pipeline/blob/main/work-sample/flow-spec.md"><b>Flow specification</b><span>The webinar automation written before it is built: logic, edge cases, tests, Salesforce status updates.</span></a>
-    <a class="card" href="https://github.com/holmes0104/signup-to-pipeline/blob/main/work-sample/tracking-plan.json"><b>Tracking plan</b><span>Events, person attributes and the UTM rules. The checker enforces it.</span></a>
-    <a class="card" href="https://github.com/holmes0104/signup-to-pipeline/blob/main/work-sample/preflight/SKILL.md"><b>Claude skill</b><span>Runs the checker, makes the judgement checks a script cannot, writes the sign-off note. Also a training note for the team.</span></a>
-    <a class="card" href="https://github.com/holmes0104/signup-to-pipeline"><b>Source on GitHub</b><span>Python checker, modular email templates, test-event script, and this page.</span></a>
-  </div>
-  <p class="note">What this is not: it has not run in Xweather's systems, and how their tools connect is unknown to me. The replay shows one reasonable design. These are the first things I would ask: where lead scoring lives, how product usage reaches Customer.io, and which sync writes to Salesforce.</p>
-</section>
+</main>
 
-<footer>
-  Thanh Nguyen (Holmes) · <a href="https://holmesnguyen.info">holmesnguyen.info</a> · Built November 2026 with Claude Code, at my direction.
+<footer class="foot">
+  Unofficial prototype by <a href="https://holmesnguyen.info">Thanh Nguyen (Holmes)</a>. Fictional people, companies and numbers; the replay is simulated. Not affiliated with Vaisala or Xweather. <a href="https://github.com/holmes0104/signup-to-pipeline">Source</a>
 </footer>
-</div>
+
 <script src="data.js"></script>
 <script src="replay.js"></script>
 <script src="preflight.js"></script>
+<script>
+(function () {
+  const views = ["replay", "preflight"];
+  function show() {
+    const v = views.includes(location.hash.slice(1)) ? location.hash.slice(1) : "replay";
+    views.forEach(k => {
+      document.getElementById("view-" + k).hidden = k !== v;
+      document.getElementById("tab-" + k).setAttribute("aria-selected", k === v);
+    });
+    document.dispatchEvent(new CustomEvent("viewchange", { detail: v }));
+  }
+  window.addEventListener("hashchange", () => { show(); window.scrollTo(0, 0); });
+  show();
+})();
+</script>
 </body>
 </html>

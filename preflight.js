@@ -7,6 +7,7 @@
   const SLUG = /^[a-z0-9_-]+$/;
   const $ = id => document.getElementById(id);
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const PLACEHOLDER = "data:image/svg+xml," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="600" height="200" viewBox="0 0 600 200"><rect width="600" height="200" fill="#1B3A4B"/><path d="M0 150 C120 110 200 160 320 120 S500 90 600 115 V200 H0Z" fill="#24506A"/><path d="M0 170 C140 140 260 185 380 150 S520 135 600 150 V200 H0Z" fill="#3860BE" opacity=".55"/></svg>');
   const fmt = s => esc(s).replace(/`([^`]+)`/g, "<code>$1</code>");
 
   let work = null, rows = [], filter = "all";
@@ -43,9 +44,14 @@
       return (src[name] && src[name].example != null) ? String(src[name].example) : "xxxxxxxx";
     });
   }
-  function preview() {
-    const html = example($("pf-html").value, work.cfg.trigger_event).replace(/\{%[^%]*%\}/g, "#");
-    $("pf-frame").srcdoc = html;
+  let pvTimer = null;
+  function preview() { clearTimeout(pvTimer); pvTimer = setTimeout(renderPreview, 60); }
+  function renderPreview() {
+    // Sample image hosts do not exist, so the preview draws a neutral placeholder; the checks still read the real HTML.
+    const html = example($("pf-html").value, work.cfg.trigger_event).replace(/\{%[^%]*%\}/g, "#")
+      .replace(/(<img\b[^>]*?\ssrc=)(["'])[^"']*\2/gi, `$1"${PLACEHOLDER}"`);
+    const w = $("pf-frame").clientWidth, fit = w && w < 650 ? `<style>html{zoom:${(w / 650).toFixed(3)}}</style>` : "";
+    $("pf-frame").srcdoc = fit && /<head[^>]*>/i.test(html) ? html.replace(/<head[^>]*>/i, m => m + fit) : fit + html;
   }
 
   function checkLiquid(add, where, text, trigger) {
@@ -170,14 +176,19 @@
     const order = { FAIL: 0, WARN: 1, PASS: 2 };
     rows.sort((a, b) => order[a[0]] - order[b[0]]);
     const c = k => rows.filter(r => r[0] === k).length;
-    $("pf-counts").innerHTML = ["FAIL", "WARN", "PASS"].map(k => `<span class="count c-${k}">${c(k)} ${k}</span>`).join("");
+    const f = c("FAIL"), w = c("WARN");
+    const v = $("pf-verdict");
+    v.textContent = f ? `${f} ${f === 1 ? "problem" : "problems"} to fix before sending` : w ? `Ready to send, ${w} to review` : "Ready to send";
+    v.className = f ? "bad" : "ok";
+    $("pf-filters").innerHTML = [["all", "All", rows.length], ["FAIL", "Fail", f], ["WARN", "Warn", w], ["PASS", "Pass", c("PASS")]]
+      .map(([k, l, n]) => `<button type="button" role="radio" data-f="${k}" aria-checked="${k === filter}">${l}<span class="n">${n}</span></button>`).join("");
     draw();
-    preview();
+    $("pf-live").classList.remove("busy");
   }
   function draw() {
     const shown = rows.filter(r => filter === "all" || r[0] === filter);
-    $("pf-rows").innerHTML = shown.map(([l, w, t]) => `<tr><td><span class="lvl c-${l}">${l}</span></td><td class="where">${esc(w)}</td><td>${fmt(t)}</td></tr>`).join("")
-      || `<tr><td colspan="3" class="muted">Nothing in this filter.</td></tr>`;
+    $("pf-rows").innerHTML = shown.map(([l, w, t]) => `<li><span class="lvl c-${l}">${l}</span><span>${fmt(t)}</span><span class="where">${esc(w)}</span></li>`).join("")
+      || `<li class="empty">Nothing here.</li>`;
   }
 
   // DNS
@@ -204,25 +215,40 @@
     return out;
   }
 
-  $("pf-campaign").onchange = e => { load(e.target.value); run(); };
+  $("pf-campaigns").onclick = e => {
+    const b = e.target.closest("button"); if (!b) return;
+    document.querySelectorAll("#pf-campaigns button").forEach(x => x.setAttribute("aria-checked", x === b));
+    filter = "all"; load(b.dataset.c); run();
+  };
   $("pf-message").onchange = e => { saveEdits(); showMessage(+e.target.value); };
-  $("pf-run").onclick = run;
-  $("pf-reset").onclick = () => { load($("pf-campaign").value); run(); };
-  $("pf-html").addEventListener("input", () => { clearTimeout(window.__pv); window.__pv = setTimeout(preview, 400); });
-  document.querySelector(".filters").onclick = e => {
+  $("pf-reset").onclick = () => { load(work.name); run(); };
+  const live = () => { $("pf-live").classList.add("busy"); clearTimeout(window.__pv); window.__pv = setTimeout(run, 450); };
+  $("pf-html").addEventListener("input", live);
+  $("pf-subject").addEventListener("input", live);
+  document.querySelector(".ed-tabs").onclick = e => {
+    const b = e.target.closest("button"); if (!b) return;
+    document.querySelectorAll(".ed-tabs button").forEach(x => x.setAttribute("aria-selected", x === b));
+    const html = b.dataset.v === "html";
+    $("pf-html").hidden = !html; $("pf-frame").hidden = html;
+    if (html) $("pf-html").focus(); else preview();
+  };
+  $("pf-filters").onclick = e => {
     const b = e.target.closest("button"); if (!b) return; filter = b.dataset.f;
-    document.querySelectorAll(".filters button").forEach(x => x.setAttribute("aria-pressed", x === b)); draw();
+    document.querySelectorAll("#pf-filters button").forEach(x => x.setAttribute("aria-checked", x === b)); draw();
   };
   $("dns-form").onsubmit = async e => {
     e.preventDefault();
     const d = $("dns-domain").value.trim().toLowerCase().replace(/^https?:\/\//, "").replace(/\/.*$/, ""), s = $("dns-sel").value.trim();
-    if (!/^[a-z0-9.-]+\.[a-z]{2,}$/.test(d)) { $("dns-rows").innerHTML = `<tr><td colspan="2">Enter a domain name such as example.com.</td></tr>`; return; }
-    $("dns-rows").innerHTML = `<tr><td colspan="2" class="muted">Looking up ${esc(d)}…</td></tr>`;
+    if (!/^[a-z0-9.-]+\.[a-z]{2,}$/.test(d)) { $("dns-rows").innerHTML = `<li class="empty">Enter a domain name such as example.com.</li>`; return; }
+    $("dns-rows").innerHTML = `<li class="empty">Looking up ${esc(d)}…</li>`;
     try {
       const out = await checkDomain(d, s);
-      $("dns-rows").innerHTML = out.map(([l, t]) => `<tr><td><span class="lvl c-${l}">${l}</span></td><td>${fmt(t)}</td></tr>`).join("");
-    } catch (err) { $("dns-rows").innerHTML = `<tr><td colspan="2">The lookup failed (${esc(err.message)}). Check the connection and try again.</td></tr>`; }
+      $("dns-rows").innerHTML = out.map(([l, t]) => `<li><span class="lvl c-${l}">${l}</span><span>${fmt(t)}</span></li>`).join("");
+    } catch (err) { $("dns-rows").innerHTML = `<li class="empty">The lookup failed (${esc(err.message)}). Check the connection and try again.</li>`; }
   };
+
+  document.addEventListener("viewchange", e => { if (e.detail === "preflight") preview(); });
+  window.addEventListener("resize", () => { clearTimeout(window.__rz); window.__rz = setTimeout(preview, 200); });
 
   load("broken-example");
   run();

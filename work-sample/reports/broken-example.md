@@ -35,7 +35,7 @@
 | WARN | promo | Link text "Click here" says nothing about the destination |
 | WARN | promo | No preference-centre link; people can only unsubscribe from everything |
 | PASS | campaign | Trigger event `webinar_registered` is in the tracking plan |
-| PASS | promo | HTML size 0.8 KB |
+| PASS | promo | HTML size 1.9 KB |
 | PASS | promo | Link "Past webinars" follows the UTM convention |
 
 Not checked by this script, needs a person: tone and claims, whether the segment matches the intent,

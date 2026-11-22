@@ -4,7 +4,7 @@
 
   const PEOPLE = {
     laura: {
-      name: "Laura", tag: "Developer at Example Air", path: "Free tier → product-qualified lead → enterprise deal",
+      name: "Laura", tag: "Developer at Example Air", path: "Free tier to enterprise",
       deal: 48000, dealName: "Example Air: weather API, enterprise volume",
       steps: [
         { day: "Day 0", title: "Clicks a LinkedIn ad", what: "Lands on the weather API page. Not signed in, so she is anonymous.", nodes: ["web", "segment"],
@@ -44,7 +44,7 @@
     },
 
     jukka: {
-      name: "Jukka", tag: "Operations lead at Example Energy", path: "Newsletter → webinar → demo request",
+      name: "Jukka", tag: "Operations lead at Example Energy", path: "Webinar to demo",
       deal: 36000, dealName: "Example Energy: wind forecasts",
       steps: [
         { day: "Day 0", title: "Clicks the monthly newsletter", what: "A known subscriber with marketing consent.", nodes: ["cio", "web", "segment"],
@@ -60,7 +60,7 @@
           sf: [["act", "Lead created: Jukka, Example Energy"], ["act", "Campaign Member added to \"2026-12 Wind webinar\""], ["", "Status: Registered"]],
           sfBroken: { err: `{\n  "errorCode": "INVALID_OR_NULL_FOR_RESTRICTED_PICKLIST",\n  "message": "Country: bad value for restricted\n    picklist field: Suomi",\n  "fields": ["Country__c"]\n}`,
             fix: "Fix at the source: the form sends ISO country codes from a dropdown. Map old values (Suomi → FI). Backfill the rejected records. Alert on sync errors the same day." },
-          why: "Two systems receive one registration. They need one shared ID, or you get duplicates. Turn on \"Break the sync\" in the Salesforce panel to see a common failure." },
+          why: "Two systems receive one registration. They need one shared ID, or you get duplicates." },
         { day: "Day 8", title: "Reminder, 24 hours before", what: "Consent is checked again before any marketing message.", nodes: ["cio"],
           event: `// No new event. A time-based step in the automation:\n// wait until webinar_start_at minus 24 h`,
           cio: [["act", "A/B test on the subject line, 50/50 split"], ["", "Metric: click-to-join rate · at least 400 people per variant"]],
@@ -88,7 +88,7 @@
     },
 
     mikko: {
-      name: "Mikko", tag: "Hobby developer", path: "Free tier, stays free",
+      name: "Mikko", tag: "Hobby developer", path: "Stays free",
       steps: [
         { day: "Day 0", title: "Finds the docs from a Google search", what: "Organic search. No UTM tags, and none are needed.", nodes: ["web", "segment"],
           event: `analytics.page("Docs: getting started", {\n  path: "/docs/weather-api/getting-started"\n})\n// referrer: google.com (organic)`,
@@ -144,80 +144,99 @@
   const $ = id => document.getElementById(id);
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   const eur = v => "€" + Math.round(v).toLocaleString("en-GB");
+  const MAIL_ICO = '<svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><rect x="2.5" y="4.5" width="15" height="11" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="m3 5.5 7 5.5 7-5.5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>';
+  const PLAY = '<svg viewBox="0 0 12 12" width="12" height="12" aria-hidden="true"><path d="M2 1v10l9-5z" fill="currentColor"/></svg>';
+  const PAUSE = '<svg viewBox="0 0 12 12" width="12" height="12" aria-hidden="true"><path d="M2 1h3v10H2zM7 1h3v10H7z" fill="currentColor"/></svg>';
   let who = "laura", i = 0, model = "w", broken = false, timer = null;
 
-  $("strip").innerHTML = NODES.map(([k, l], n) => (n ? '<span class="arrow">→</span>' : "") + `<span class="node" data-n="${k}">${l}</span>`).join("");
   $("people").innerHTML = Object.entries(PEOPLE).map(([k, p]) =>
-    `<button type="button" class="person" role="tab" data-p="${k}" aria-selected="${k === who}"><b>${p.name} · ${p.tag}</b><span>${p.path}</span></button>`).join("");
+    `<button type="button" role="radio" data-p="${k}" aria-checked="${k === who}"><b>${p.name}</b>${p.steps.some(x => x.breakable) ? '<i class="flag" title="Includes a sync error to try"></i>' : ""} <span>· ${p.path}</span></button>`).join("");
   $("models").innerHTML = Object.entries(MODELS).map(([k, l]) => `<button type="button" role="radio" data-m="${k}" aria-checked="${k === model}">${l}</button>`).join("");
+  $("flow").innerHTML = NODES.map(([k, l]) => `<span class="node" data-n="${k}">${l}</span>`).join("");
 
-  const lines = arr => arr.map(([b, t]) => `<p>${b ? `<span class="badge ${b === "act" ? "b-act" : "b-idle"}">${b === "act" ? "Now" : "Idle"}</span>` : ""}${esc(t)}</p>`).join("");
+  const lines = arr => arr.map(([b, t]) => `<p class="${b === "idle" ? "q" : ""}">${b === "act" ? '<span class="badge b-act">Now</span>' : ""}${esc(t)}</p>`).join("");
+
+  function journey() {
+    const p = PEOPLE[who];
+    $("journey").innerHTML = p.steps.map((st, n) =>
+      `<li class="${n < i ? "done" : n === i ? "cur" : ""}${st.breakable ? " brk" : ""}"><button type="button" data-i="${n}" ${n === i ? 'aria-current="step"' : ""}><span class="d">${st.day}</span><span class="dot"></span><span class="t">${esc(st.title)}</span>${st.breakable ? '<span class="brk-tag">Break it</span>' : ""}</button></li>`).join("");
+    const cur = $("journey").children[i];
+    if (cur && $("journey").scrollWidth > $("journey").clientWidth) {
+      const j = $("journey");
+      j.scrollTo({ left: cur.offsetLeft - j.clientWidth / 2 + cur.offsetWidth / 2, behavior: "smooth" });
+    }
+  }
 
   function render() {
     const p = PEOPLE[who], s = p.steps[i];
-    $("stepday").textContent = `${s.day} · step ${i + 1} of ${p.steps.length}`;
+    journey();
+    $("stepday").textContent = `${p.name}, ${p.tag.charAt(0).toLowerCase() + p.tag.slice(1)} · ${s.day}`;
     $("steptitle").textContent = s.title;
     $("stepwhat").textContent = s.what;
     document.querySelectorAll(".node").forEach(el => el.classList.toggle("on", s.nodes.includes(el.dataset.n)));
-    $("dots").innerHTML = p.steps.map((st, n) => `<li><button type="button" data-i="${n}" ${n === i ? 'aria-current="step"' : ""} title="${esc(st.title)}">${n + 1}</button></li>`).join("");
-    const isBroken = s.breakable && broken;
+    const isBroken = !!(s.breakable && broken);
     $("p-event").textContent = isBroken ? s.eventBroken : s.event;
     $("p-cio").innerHTML = (isBroken ? lines([["act", "Registration received; confirmation sent."], ["", "Customer.io accepts free text. The failure shows up downstream."]]) : lines(s.cio))
-      + (s.mail ? `<div class="mail"><b>✉ ${esc(s.mail[0])}</b><span>${esc(s.mail[1])}</span></div>` : "");
-    let sf = isBroken
-      ? `<p><span class="badge b-err">Error</span>Record rejected. No Lead, no Campaign Member.</p><pre>${esc(s.sfBroken.err)}</pre>`
+      + (s.mail ? `<div class="mail">${MAIL_ICO}<div><b>${esc(s.mail[0])}</b><span>${esc(s.mail[1])}</span></div></div>` : "");
+    $("p-sf").innerHTML = isBroken
+      ? `<p><span class="badge b-err">Rejected</span>No Lead, no Campaign Member.</p><pre>${esc(s.sfBroken.err)}</pre>`
       : lines(s.sf);
-    if (s.breakable) sf += `<label class="breaker"><input type="checkbox" id="brk" ${broken ? "checked" : ""}> Break the sync</label>`;
-    $("p-sf").innerHTML = sf;
-    $("p-why").innerHTML = `<p>${esc(isBroken ? s.sfBroken.fix : s.why)}</p>`;
+    $("sf-tool").innerHTML = s.breakable ? `<label class="switch${broken ? "" : " hint"}"><input type="checkbox" id="brk" ${broken ? "checked" : ""}>Break the sync</label>` : "";
+    $("sf-panel").classList.toggle("err", isBroken);
+    $("p-why").innerHTML = `<b class="${isBroken ? "fix" : ""}">${isBroken ? "Fix" : "Watch for"}</b><span>${esc(isBroken ? s.sfBroken.fix : s.why)}</span>`;
     $("prev").disabled = i === 0; $("next").disabled = i === p.steps.length - 1;
     const brk = $("brk"); if (brk) brk.onchange = e => { stop(); broken = e.target.checked; render(); };
     renderAttr(i === p.steps.length - 1);
   }
 
   function renderAttr(show) {
-    const p = PEOPLE[who], box = $("attr");
+    const p = PEOPLE[who], box = $("attr"), was = !box.hidden;
     box.hidden = !show;
     if (!show) return;
+    if (!was) requestAnimationFrame(() => { const r = box.getBoundingClientRect(); if (r.bottom > innerHeight) scrollBy({ top: r.bottom - innerHeight + 24, behavior: "smooth" }); });
     if (!p.touches) {
-      $("attr-sub").textContent = "No opportunity, so there is nothing to credit. Reports should still count Mikko as an activated free user.";
+      $("attr-title").textContent = "No deal, nothing to credit";
+      $("attr-sub").textContent = "Mikko counts as an activated free user.";
       $("models").hidden = true; $("attr-bars").innerHTML = ""; $("attr-note").textContent = ""; return;
     }
     $("models").hidden = false;
-    $("attr-sub").textContent = `${p.dealName} · ${eur(p.deal)} · ${p.touches.length} touches. Switch the model to see how the same deal is credited.`;
+    $("attr-title").textContent = `Who gets credit for ${eur(p.deal)}`;
+    $("attr-sub").textContent = p.dealName;
     document.querySelectorAll("#models button").forEach(b => b.setAttribute("aria-checked", b.dataset.m === model));
     const c = credit(p.touches, model);
     $("attr-bars").innerHTML = p.touches.map((t, n) =>
-      `<div class="bar"><span>${esc(t[0])}</span><div class="track"><div class="fill" style="width:${(c[n] * 100).toFixed(1)}%"></div></div><span class="val">${eur(c[n] * p.deal)}</span></div>`).join("");
-    $("attr-note").textContent = MODEL_NOTE[model] + " Email touches can look worthless under first or last touch. That is why the model is a decision to explain, and one model should stay the reporting standard. Splits are common defaults; tools such as Dreamdata define their own.";
+      `<div class="bar-row"><span>${esc(t[0])}</span><div class="track"><div class="fill" style="width:${(c[n] * 100).toFixed(1)}%"></div></div><span class="val">${eur(c[n] * p.deal)}</span></div>`).join("");
+    $("attr-note").textContent = MODEL_NOTE[model];
   }
 
   function go(n) { const len = PEOPLE[who].steps.length; i = Math.max(0, Math.min(len - 1, n)); render(); }
-  function stop() { if (timer) { clearInterval(timer); timer = null; $("auto").textContent = ""; } }
+  function setPlay(on) {
+    $("play").classList.toggle("on", on);
+    $("play-ico").innerHTML = on ? PAUSE : PLAY;
+    $("play-txt").textContent = on ? "Pause" : (i >= PEOPLE[who].steps.length - 1 ? "Replay" : "Play");
+    $("play").setAttribute("aria-label", on ? "Pause" : "Play");
+  }
+  function stop() { if (timer) { clearInterval(timer); timer = null; } setPlay(false); }
+  function play() {
+    if (i >= PEOPLE[who].steps.length - 1) go(0);
+    setPlay(true);
+    timer = setInterval(() => { if (i >= PEOPLE[who].steps.length - 1) { stop(); return; } go(i + 1); setPlay(true); }, 8000);
+  }
 
+  $("play").onclick = () => { timer ? stop() : play(); };
   $("prev").onclick = () => { stop(); go(i - 1); };
   $("next").onclick = () => { stop(); go(i + 1); };
-  $("dots").onclick = e => { const b = e.target.closest("button"); if (b) { stop(); go(+b.dataset.i); } };
+  $("journey").onclick = e => { const b = e.target.closest("button"); if (b) { stop(); go(+b.dataset.i); } };
   $("people").onclick = e => { const b = e.target.closest("button"); if (!b) return; stop(); who = b.dataset.p; broken = false;
-    document.querySelectorAll(".person").forEach(x => x.setAttribute("aria-selected", x === b)); go(0); };
+    document.querySelectorAll("#people button").forEach(x => x.setAttribute("aria-checked", x === b)); go(0); setPlay(false); };
   $("models").onclick = e => { const b = e.target.closest("button"); if (b) { model = b.dataset.m; renderAttr(true); } };
   document.addEventListener("keydown", e => {
-    if (e.target.closest("input,textarea,select,[role=radio],[role=tab]")) return;
-    const r = $("replay").getBoundingClientRect();
-    if (r.bottom < 0 || r.top > window.innerHeight) return;
+    if ($("view-replay").hidden || e.target.closest("input,textarea,select,[role=radio]")) return;
     if (e.key === "ArrowRight") { stop(); go(i + 1); } else if (e.key === "ArrowLeft") { stop(); go(i - 1); }
   });
+  document.addEventListener("viewchange", e => { if (e.detail !== "replay") stop(); });
 
-  render();
+  render(); setPlay(false);
   const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  let started = false;
-  function autoplay() {
-    if (started || reduce) return; started = true;
-    $("auto").textContent = "Playing Laura's steps. Click anything to take over.";
-    timer = setInterval(() => { if (i >= PEOPLE[who].steps.length - 1) { stop(); return; } go(i + 1); }, 4500);
-  }
-  if ("IntersectionObserver" in window) {
-    const io = new IntersectionObserver(es => { if (es.some(x => x.isIntersecting)) { io.disconnect(); autoplay(); } }, { threshold: 0.35 });
-    io.observe(document.querySelector(".stage"));
-  } else autoplay();
+  if (!reduce && !$("view-replay").hidden) setTimeout(() => { if (!timer && i === 0 && !$("view-replay").hidden) play(); }, 1500);
 })();
