@@ -20,3 +20,10 @@ Live page: https://xweather.holmesnguyen.info
 Open `index.html` in a browser, or serve the folder with any static server. No build step and no dependencies.
 
 Built with Claude Code, at my direction.
+
+## Email photos
+
+Both are CC0 (no credit required; credited anyway), hosted in `email/` at 1200 × 500 and shown at 600 px:
+
+- `email/wind-farm.jpg`: "Kentish Flats Offshore Wind Farm" by Back ache, CC0, via Wikimedia Commons (https://commons.wikimedia.org/w/index.php?curid=152241516)
+- `email/storm.jpg`: "Stormy weather", CC0, via rawpixel (https://www.rawpixel.com/image/3298982/free-photo-image-storm-cc0-creative-commons)

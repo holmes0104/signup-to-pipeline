@@ -5,7 +5,7 @@ Writes campaigns/webinar-nurture/emails/*.html. Liquid tags stay in the HTML for
 """
 import json
 from pathlib import Path
-from blocks import document, header, heading, paragraph, bullets, button, divider, footer, utm
+from blocks import document, header, heading, hero_image, paragraph, bullets, button, divider, footer, utm
 
 ROOT = Path(__file__).resolve().parents[1]
 CAMPAIGN = ROOT / "campaigns" / "webinar-nurture"
@@ -15,6 +15,7 @@ SITE = "https://www.xweather.com/"
 API = "https://www.xweather.com/weather-api"
 DOCS = "https://www.xweather.com/docs"
 CONTACT = "https://www.xweather.com/contact"
+WIND = ("wind-farm.jpg", "Offshore wind turbines at sea under an evening sky")
 NAME = '{{customer.first_name | default: "there"}}'
 TITLE = '{{event.webinar_title | default: "our webinar"}}'
 
@@ -26,7 +27,8 @@ def msg(message_id):
 EMAILS = {
     "confirm": [
         header("Webinar registration"),
-        heading("You're registered"),
+        heading("You're registered", spacer=False),
+        hero_image(*WIND),
         paragraph(f"Hi {NAME},"),
         paragraph(f"Your seat for <strong>{TITLE}</strong> is saved. The session starts "
                   '{{event.webinar_start_at | date: "%-d %B %Y, %H:%M UTC"}}.'),
@@ -37,7 +39,8 @@ EMAILS = {
     ],
     "reminder-24h": [
         header("Tomorrow"),
-        heading(TITLE),
+        heading(TITLE, spacer=False),
+        hero_image(*WIND),
         paragraph(f"Hi {NAME},"),
         paragraph("The session starts in 24 hours. One question to bring with you:"),
         bullets(["Which forecast decision costs your team the most when it is wrong?"]),
@@ -48,7 +51,8 @@ EMAILS = {
     ],
     "followup-attended": [
         header("Thank you for joining"),
-        heading("Slides, recording and the next step"),
+        heading("Slides, recording and the next step", spacer=False),
+        hero_image(*WIND),
         paragraph(f"Hi {NAME},"),
         paragraph("Thanks for joining the session. Everything from it is in one place:"),
         bullets(["The full recording, with chapters", "The slides as a PDF", "Answers to the questions we ran out of time for"]),
@@ -60,7 +64,8 @@ EMAILS = {
     ],
     "followup-missed": [
         header("Recording ready"),
-        heading("Missed the session? Watch it in your own time"),
+        heading("Missed the session? Watch it in your own time", spacer=False),
+        hero_image(*WIND),
         paragraph(f"Hi {NAME},"),
         paragraph(f"The recording of <strong>{TITLE}</strong> is ready. Chapter links take you straight to the part you need."),
         button("Watch the recording", utm(SITE, CID, "followup-missed")),

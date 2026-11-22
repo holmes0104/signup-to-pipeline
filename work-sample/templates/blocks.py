@@ -79,9 +79,19 @@ def header(label):
 <tr><td class="px" style="padding:36px 40px 6px; background:{INK}; font:13px/1.4 {MONO}; letter-spacing:-.02em; color:{LINE};">{escape(label)}</td></tr>"""
 
 
-def heading(text):
+IMAGES = "https://xweather.holmesnguyen.info/email/"
+
+
+def heading(text, spacer=True):
     """Large, light headline on the dark band, as on xweather.com."""
-    return f"""<tr><td class="px hero-h" style="padding:4px 40px 36px; background:{INK}; font:300 34px/1.15 {FONT}; letter-spacing:-1px; color:#FFFFFF;">{text}</td></tr>
+    gap = '\n<tr><td style="height:16px; font-size:0; line-height:0;">&nbsp;</td></tr>' if spacer else ""
+    return f"""<tr><td class="px hero-h" style="padding:4px 40px 36px; background:{INK}; font:300 34px/1.15 {FONT}; letter-spacing:-1px; color:#FFFFFF;">{text}</td></tr>{gap}"""
+
+
+def hero_image(file, alt):
+    """Full-width photo under the dark band. 1200 px source shown at 600 for sharp retina display;
+    width attribute for Outlook, alt text for blocked images, dark cell so a blocked image still reads as a band."""
+    return f"""<tr><td style="padding:0; background:{INK}; font:14px/1.4 {FONT}; color:{LINE};"><img src="{IMAGES}{file}" width="600" height="250" alt="{escape(alt)}" style="display:block; width:100%; max-width:600px; height:auto; border:0;"></td></tr>
 <tr><td style="height:16px; font-size:0; line-height:0;">&nbsp;</td></tr>"""
 
 

@@ -41,15 +41,27 @@
     return text.replace(/\{\{\s*(.*?)\s*\}\}/g, (_, e) => {
       const [scope, name] = e.split(/\s*\|/)[0].trim().split(".");
       const src = scope === "customer" ? plan.person_attributes : ((plan.events[trigger] || {}).properties || {});
-      return (src[name] && src[name].example != null) ? String(src[name].example) : "xxxxxxxx";
+      if (!(src[name] && src[name].example != null)) return "xxxxxxxx";
+      const val = String(src[name].example), fmt = e.match(/\|\s*date:\s*["']([^"']+)["']/);
+      return fmt ? strftime(val, fmt[1]) : val;
     });
+  }
+  const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  function strftime(iso, f) {
+    const d = new Date(iso); if (isNaN(d)) return iso;
+    const p = n => String(n).padStart(2, "0");
+    const map = { "-d": d.getUTCDate(), d: p(d.getUTCDate()), B: MONTHS[d.getUTCMonth()], b: MONTHS[d.getUTCMonth()].slice(0, 3), Y: d.getUTCFullYear(), m: p(d.getUTCMonth() + 1), H: p(d.getUTCHours()), M: p(d.getUTCMinutes()) };
+    return f.replace(/%(-d|[dBbYmHM])/g, (_, k) => map[k]);
   }
   let pvTimer = null;
   function preview() { clearTimeout(pvTimer); pvTimer = setTimeout(renderPreview, 60); }
   function renderPreview() {
     // Sample image hosts do not exist, so the preview draws a neutral placeholder; the checks still read the real HTML.
     const html = example($("pf-html").value, work.cfg.trigger_event).replace(/\{%[^%]*%\}/g, "#")
-      .replace(/(<img\b[^>]*?\ssrc=)(["'])[^"']*\2/gi, `$1"${PLACEHOLDER}"`);
+      .replace(/(<img\b[^>]*?\ssrc=)(["'])([^"']*)\2/gi, (_, pre, q, src) => {
+        const own = src.match(/^https?:\/\/xweather\.holmesnguyen\.info\/email\/([\w.-]+)$/);
+        return `${pre}"${own ? new URL("email/" + own[1], location.href).href : PLACEHOLDER}"`;
+      });
     const w = $("pf-frame").clientWidth, fit = w && w < 650 ? `<style>html{zoom:${(w / 650).toFixed(3)}}</style>` : "";
     $("pf-frame").srcdoc = fit && /<head[^>]*>/i.test(html) ? html.replace(/<head[^>]*>/i, m => m + fit) : fit + html;
   }
@@ -211,7 +223,19 @@
       const ok = ["quarantine", "reject"].includes(policy);
       add(ok ? "PASS" : "WARN", `DMARC policy ${policy}${inherited}${ok ? "" : " (monitoring only; move to quarantine once reports are clean)"}; reports to ${tags.rua || "nobody"}`);
     }
-    if (sel) { const dk = (await doh(`${sel}._domainkey.${domain}`)).filter(t => t.includes("p=")); add(dk.length ? "PASS" : "FAIL", `DKIM selector \`${sel}\` ${dk.length ? "found" : "not found"}`); }
+    // DKIM keys sit under a selector that DNS cannot list. With no selector given, try the common ones
+    // (Microsoft 365, Google Workspace, Mailchimp, SendGrid, Amazon SES, Resend and generic names).
+    const sels = sel ? [sel] : ["selector1", "selector2", "google", "k1", "k2", "s1", "s2", "default", "dkim", "mail", "resend"];
+    // A key counts only if p= holds key data; an empty p= is a revoked key ("this name sends no mail").
+    const keys = await Promise.all(sels.map(async s => {
+      const txt = (await doh(`${s}._domainkey.${domain}`)).filter(t => /(^|;)\s*p=/.test(t)).join("");
+      return { s, live: /(^|;)\s*p=[A-Za-z0-9+/=]{40,}/.test(txt.replace(/\s/g, "")), revoked: /(^|;)\s*p=\s*(;|$)/.test(txt) };
+    }));
+    const found = keys.filter(k => k.live).map(k => k.s), revoked = keys.some(k => k.revoked);
+    if (found.length) add("PASS", `DKIM key found for selector${found.length > 1 ? "s" : ""} ${found.map(s => "`" + s + "`").join(", ")}`);
+    else if (revoked) add("WARN", "DKIM key is empty (revoked): this domain declares that it sends no signed mail");
+    else if (sel) add("FAIL", `DKIM selector \`${sel}\` not found`);
+    else add("WARN", "No DKIM key under the common selectors; read the s= value in a sent email's DKIM-Signature header and enter it");
     return out;
   }
 
@@ -247,7 +271,12 @@
     } catch (err) { $("dns-rows").innerHTML = `<li class="empty">The lookup failed (${esc(err.message)}). Check the connection and try again.</li>`; }
   };
 
-  document.addEventListener("viewchange", e => { if (e.detail === "preflight") preview(); });
+  let dnsDone = false;
+  document.addEventListener("viewchange", e => {
+    if (e.detail !== "preflight") return;
+    preview();
+    if (!dnsDone) { dnsDone = true; $("dns-form").requestSubmit(); }
+  });
   window.addEventListener("resize", () => { clearTimeout(window.__rz); window.__rz = setTimeout(preview, 200); });
 
   load("broken-example");

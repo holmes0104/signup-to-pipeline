@@ -10,8 +10,8 @@
 | FAIL | campaign | Campaign ID (used as utm_campaign) is not a lowercase slug; UTM reports will split |
 | FAIL | promo subject | `{{customer.firstname}}`: attribute `firstname` is not in the tracking plan |
 | FAIL | promo | No viewport meta tag; mobile layout will not scale |
-| FAIL | promo | Image without alt text: http://cdn.example.com/hero.png |
-| FAIL | promo | Image loaded over HTTP: http://cdn.example.com/hero.png |
+| FAIL | promo | Image without alt text: http://xweather.holmesnguyen.info/email/storm.jpg |
+| FAIL | promo | Image loaded over HTTP: http://xweather.holmesnguyen.info/email/storm.jpg |
 | FAIL | promo | `{{customer.first_name}}` has no `default` fallback; empty for people without `first_name` |
 | FAIL | promo | `{{event.webinar_name}}`: `webinar_name` is not a property of trigger event `webinar_registered` |
 | FAIL | promo | Link "Click here" to an owned page is missing utm_source, utm_medium, utm_campaign |
@@ -31,7 +31,7 @@
 | WARN | promo | Preheader in campaign.json does not match the hidden preheader in the HTML |
 | WARN | promo | `<html>` has no lang attribute (screen readers) |
 | WARN | promo | No color-scheme meta; dark-mode clients may invert colours unpredictably |
-| WARN | promo | Image without width attribute (Outlook may show it full size): http://cdn.example.com/hero.png |
+| WARN | promo | Image without width attribute (Outlook may show it full size): http://xweather.holmesnguyen.info/email/storm.jpg |
 | WARN | promo | Link text "Click here" says nothing about the destination |
 | WARN | promo | No preference-centre link; people can only unsubscribe from everything |
 | PASS | campaign | Trigger event `webinar_registered` is in the tracking plan |

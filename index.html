@@ -94,7 +94,7 @@
         <span class="live" id="pf-live"><i></i>Live check</span>
       </div>
       <div class="ed-body">
-        <iframe id="pf-frame" title="Email preview" sandbox=""></iframe>
+        <iframe id="pf-frame" title="Email preview" sandbox="allow-same-origin"></iframe>
         <textarea id="pf-html" spellcheck="false" aria-label="Email HTML" hidden></textarea>
       </div>
     </div>
@@ -108,8 +108,8 @@
 
   <form class="card dns" id="dns-form">
     <h3>Sending domain</h3>
-    <label class="field"><span>Domain</span><input id="dns-domain" type="text" value="praised.co" spellcheck="false" autocomplete="off"></label>
-    <label class="field narrow"><span>DKIM selector</span><input id="dns-sel" type="text" value="resend" spellcheck="false" autocomplete="off"></label>
+    <label class="field"><span>Domain</span><input id="dns-domain" type="text" value="xweather.com" spellcheck="false" autocomplete="off"></label>
+    <label class="field narrow"><span>DKIM selector</span><input id="dns-sel" type="text" value="" placeholder="Auto" spellcheck="false" autocomplete="off"></label>
     <button type="submit" class="primary">Check</button>
     <ul class="results inline" id="dns-rows"></ul>
   </form>
