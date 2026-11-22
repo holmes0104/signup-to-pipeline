@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="supported-color-schemes" content="light dark">
+<title>You&#x27;re registered: {{event.webinar_title}}</title>
+<style>
+  @media only screen and (max-width: 620px) {
+    .container { width: 100% !important; }
+    .px { padding-left: 20px !important; padding-right: 20px !important; }
+    .btn a { display: block !important; text-align: center !important; }
+    .hero-h { font-size: 28px !important; }
+  }
+  @media (prefers-color-scheme: dark) {
+    .bg { background: #09151C !important; }
+    .card { background: #0E1F2C !important; }
+    .ink { color: #D9E0E6 !important; }
+    .muted { color: #859BA3 !important; }
+    .btn-cell { background: #D3EBEA !important; }
+    .btn-cell a { color: #09151C !important; }
+    .lnk { color: #D3EBEA !important; }
+  }
+</style>
+</head>
+<body style="margin:0; padding:0; background:#F2F4F6;" class="bg">
+<div style="display:none; max-height:0; overflow:hidden; mso-hide:all;">Your join link and a calendar reminder for the live session.&#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847;</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F2F4F6;" class="bg">
+<tr><td align="center" style="padding:24px 12px;">
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" class="container card" style="width:600px; max-width:600px; background:#FFFFFF; border-radius:8px; overflow:hidden;">
+<tr><td class="px" style="padding:24px 40px 0; background:#09151C; font:bold 20px/1.1 'Helvetica Neue', Helvetica, Arial, sans-serif; letter-spacing:-.02em; color:#FFFFFF;"><span style="font:10px/1 SFMono-Regular, Menlo, Consolas, 'Courier New', monospace; letter-spacing:.14em; color:#D9E0E6;">VAISALA</span><br>Xweather</td></tr>
+<tr><td class="px" style="padding:36px 40px 6px; background:#09151C; font:13px/1.4 SFMono-Regular, Menlo, Consolas, 'Courier New', monospace; letter-spacing:-.02em; color:#D9E0E6;">Webinar registration</td></tr>
+<tr><td class="px hero-h" style="padding:4px 40px 36px; background:#09151C; font:300 34px/1.15 'Helvetica Neue', Helvetica, Arial, sans-serif; letter-spacing:-1px; color:#FFFFFF;">You're registered</td></tr>
+<tr><td style="height:16px; font-size:0; line-height:0;">&nbsp;</td></tr>
+<tr><td class="px ink" style="padding:8px 40px; font:16px/1.55 'Helvetica Neue', Helvetica, Arial, sans-serif; color:#09151C;">Hi {{customer.first_name | default: "there"}},</td></tr>
+<tr><td class="px ink" style="padding:8px 40px; font:16px/1.55 'Helvetica Neue', Helvetica, Arial, sans-serif; color:#09151C;">Your seat for <strong>{{event.webinar_title | default: "our webinar"}}</strong> is saved. The session starts {{event.webinar_start_at | date: "%-d %B %Y, %H:%M UTC"}}.</td></tr>
+<tr><td class="px btn" style="padding:16px 40px 8px;">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
+<td class="btn-cell" style="background:#0E1F2C; border-radius:8px;"><a href="{{event.join_url}}" style="display:inline-block; padding:14px 24px; font:15px/1 'Helvetica Neue', Helvetica, Arial, sans-serif; color:#FFFFFF; text-decoration:none; border-radius:8px;">Join the session</a></td>
+</tr></table></td></tr>
+<tr><td class="px ink" style="padding:8px 40px; font:16px/1.55 'Helvetica Neue', Helvetica, Arial, sans-serif; color:#09151C;">Add the session to your calendar from the join page. We will send the recording afterwards.</td></tr>
+<tr><td class="px" style="padding:16px 40px;"><div style="border-top:1px solid #D9E0E6; font-size:0; line-height:0;">&nbsp;</div></td></tr>
+<tr><td class="px muted" style="padding:8px 40px 32px; font:12px/1.5 'Helvetica Neue', Helvetica, Arial, sans-serif; color:#556079;">You receive this email because you registered for this webinar. It is a service message about your registration.<br>Unofficial sample made for a job application. Not sent by Vaisala.</td></tr>
+</table>
+</td></tr>
+</table>
+</body>
+</html>

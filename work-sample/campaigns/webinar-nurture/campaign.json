@@ -1,0 +1,47 @@
+{
+  "campaign_id": "wx-webinar-wind-2026-12",
+  "name": "Webinar nurture: wind forecasts for operators (sample)",
+  "type": "event-triggered campaign",
+  "trigger_event": "webinar_registered",
+  "nurture_filter": "consent_marketing_email = true AND email exists",
+  "_filter_note": "The confirmation is transactional and goes to every registrant. Every later message needs marketing consent.",
+  "subscription_topic": "Events and webinars",
+  "owned_domains": ["www.xweather.com"],
+  "sender": {
+    "from_name": "Weather data team (sample)",
+    "from_email": "events@mail.example.com",
+    "reply_to": "marketing@example.com",
+    "authenticated_domains": ["mail.example.com"]
+  },
+  "messages": [
+    {
+      "message_id": "confirm",
+      "file": "emails/confirm.html",
+      "subject": "You're registered: {{event.webinar_title}}",
+      "preheader": "Your join link and a calendar reminder for the live session.",
+      "transactional": true
+    },
+    {
+      "message_id": "reminder-24h",
+      "file": "emails/reminder-24h.html",
+      "subject_variants": {
+        "A": "Tomorrow: {{event.webinar_title}}",
+        "B": "{{customer.first_name | default: \"Hi\"}}, your seat for tomorrow is saved"
+      },
+      "preheader": "One question to think about before the session, plus your join link.",
+      "ab_test": {"metric": "click-to-join rate", "split": "50/50", "min_per_variant": 400}
+    },
+    {
+      "message_id": "followup-attended",
+      "file": "emails/followup-attended.html",
+      "subject": "Slides, recording and the next step",
+      "preheader": "Thanks for joining. Here is everything from the session in one place."
+    },
+    {
+      "message_id": "followup-missed",
+      "file": "emails/followup-missed.html",
+      "subject": "Missed the session? Watch the recording",
+      "preheader": "The full recording is ready, with chapter links to the parts you need."
+    }
+  ]
+}

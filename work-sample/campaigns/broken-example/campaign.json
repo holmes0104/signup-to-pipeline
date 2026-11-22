@@ -1,0 +1,23 @@
+{
+  "campaign_id": "Q4 Promo",
+  "name": "Broken example: what the checker catches (seeded errors)",
+  "type": "event-triggered campaign",
+  "trigger_event": "webinar_registered",
+  "nurture_filter": "email exists",
+  "subscription_topic": "",
+  "owned_domains": ["www.example.com"],
+  "sender": {
+    "from_name": "Marketing",
+    "from_email": "news@newsletter-tool.example.net",
+    "reply_to": "",
+    "authenticated_domains": ["mail.example.com"]
+  },
+  "messages": [
+    {
+      "message_id": "promo",
+      "file": "emails/promo.html",
+      "subject": "FREE weather data trial for {{customer.firstname}}!!! Act now before this offer ends",
+      "preheader": "Hi"
+    }
+  ]
+}

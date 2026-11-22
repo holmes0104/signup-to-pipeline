@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>From sign-up to pipeline · a working prototype by Thanh Nguyen (Holmes)</title>
+<meta name="description" content="A working prototype of lifecycle marketing automation for a weather API business: a step-by-step replay across Segment, Customer.io, Salesforce and attribution, plus a pre-send campaign checker.">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,500..800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <p class="eyebrow">Working prototype · by Thanh Nguyen (Holmes)</p>
+  <h1>From sign&#8209;up to pipeline</h1>
+  <p class="lede">How one person moves through a weather API company's marketing stack, and how I check a campaign before it goes out. Made for my application to the Marketing Automation and Technology Specialist role at Vaisala Xweather.</p>
+  <ul class="facts">
+    <li><b>1 · Lifecycle replay.</b> Pick a person. See the event data, the Customer.io automation, the Salesforce record and the attribution change at each step.</li>
+    <li><b>2 · Preflight checker.</b> A pre-send QA tool that runs in your browser. It opens on a campaign with planted errors.</li>
+  </ul>
+  <p class="disclaimer">Fictional people, companies and numbers. Not connected to, or endorsed by, Vaisala or Xweather. The free tier (15,000 accesses a month) and the €300 subscription come from xweather.com's public pricing page, checked 21 November 2026.</p>
+</header>
+
+<section id="replay" aria-labelledby="replay-h">
+  <div class="sec-head">
+    <p class="eyebrow">Part 1</p>
+    <h2 id="replay-h">Lifecycle replay</h2>
+    <p class="sub">Each step shows what is sent, what each tool does with it, and what could break. Use the arrows or the step list.</p>
+  </div>
+
+  <div class="people" role="tablist" aria-label="Choose a person" id="people"></div>
+
+  <div class="stage">
+    <div class="strip" id="strip" aria-hidden="true"></div>
+
+    <div class="stepbar">
+      <button type="button" id="prev" aria-label="Previous step">←</button>
+      <div class="stepinfo" aria-live="polite"><span id="stepday" class="day"></span><h3 id="steptitle"></h3><p id="stepwhat"></p></div>
+      <button type="button" id="next" aria-label="Next step">→</button>
+    </div>
+    <ol class="dots" id="dots" aria-label="Steps"></ol>
+    <p class="auto" id="auto"></p>
+
+    <div class="panels">
+      <article class="panel"><h4>Data sent <span class="tool">Segment calls · tracking-plan names</span></h4><pre id="p-event"></pre></article>
+      <article class="panel"><h4>Customer.io</h4><div id="p-cio"></div></article>
+      <article class="panel"><h4>Salesforce <span class="tool">via the team's sync</span></h4><div id="p-sf"></div></article>
+      <article class="panel why"><h4>What could break, or why it matters</h4><div id="p-why"></div></article>
+    </div>
+
+    <div class="attr" id="attr" hidden>
+      <h3>Who gets credit for the deal?</h3>
+      <p class="sub" id="attr-sub"></p>
+      <div class="models" role="radiogroup" aria-label="Attribution model" id="models"></div>
+      <div id="attr-bars"></div>
+      <p class="note" id="attr-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="preflight" aria-labelledby="pf-h">
+  <div class="sec-head">
+    <p class="eyebrow">Part 2</p>
+    <h2 id="pf-h">Preflight checker</h2>
+    <p class="sub">The checks I would run before any send, built as a tool the whole team can use. It reads the campaign set-up and the tracking plan, then tests every message. It opens on a campaign with planted errors. Edit the HTML or the subject and run it again.</p>
+  </div>
+
+  <div class="pf-controls">
+    <label for="pf-campaign">Campaign</label>
+    <select id="pf-campaign">
+      <option value="broken-example">Broken example (planted errors)</option>
+      <option value="webinar-nurture">Webinar nurture (4 emails)</option>
+    </select>
+    <label for="pf-message">Message</label>
+    <select id="pf-message"></select>
+    <button type="button" id="pf-run" class="primary">Run checks</button>
+    <button type="button" id="pf-reset">Reset edits</button>
+  </div>
+
+  <div class="pf-grid">
+    <div class="pf-edit">
+      <label for="pf-subject">Subject</label>
+      <input id="pf-subject" type="text" spellcheck="false">
+      <label for="pf-html">Email HTML</label>
+      <textarea id="pf-html" spellcheck="false" rows="14"></textarea>
+      <details class="pf-preview"><summary>Preview with example data</summary><iframe id="pf-frame" title="Email preview" sandbox=""></iframe></details>
+    </div>
+    <div class="pf-report">
+      <div class="counts" id="pf-counts"></div>
+      <div class="filters" role="group" aria-label="Filter results">
+        <button type="button" data-f="all" aria-pressed="true">All</button>
+        <button type="button" data-f="FAIL" aria-pressed="false">Fail</button>
+        <button type="button" data-f="WARN" aria-pressed="false">Warn</button>
+        <button type="button" data-f="PASS" aria-pressed="false">Pass</button>
+      </div>
+      <div class="tbl"><table><thead><tr><th>Result</th><th>Where</th><th>Check</th></tr></thead><tbody id="pf-rows"></tbody></table></div>
+      <p class="note">Needs a person, not this script: tone and claims, whether the segment matches the intent, send time, rendering in real inboxes, and sign-off from the campaign owner. Link status checks run in the command-line version only.</p>
+    </div>
+  </div>
+
+  <div class="dns">
+    <h3>Sending domain check</h3>
+    <p class="sub">Looks up SPF, DMARC and a DKIM selector over DNS-over-HTTPS (dns.google). Only the domain name is sent.</p>
+    <form id="dns-form" class="pf-controls">
+      <label for="dns-domain">Domain</label><input id="dns-domain" type="text" value="praised.co" spellcheck="false" autocomplete="off">
+      <label for="dns-sel">DKIM selector</label><input id="dns-sel" type="text" value="resend" spellcheck="false" autocomplete="off">
+      <button type="submit" class="primary">Check domain</button>
+    </form>
+    <div class="tbl"><table><tbody id="dns-rows"><tr><td colspan="2" class="muted">Run a check to see results. praised.co is my own project's domain.</td></tr></tbody></table></div>
+  </div>
+</section>
+
+<section id="notes" aria-labelledby="notes-h">
+  <div class="sec-head">
+    <p class="eyebrow">Behind it</p>
+    <h2 id="notes-h">The working files</h2>
+  </div>
+  <div class="cards">
+    <a class="card" href="https://github.com/holmes0104/signup-to-pipeline/blob/main/work-sample/flow-spec.md"><b>Flow specification</b><span>The webinar automation written before it is built: logic, edge cases, tests, Salesforce status updates.</span></a>
+    <a class="card" href="https://github.com/holmes0104/signup-to-pipeline/blob/main/work-sample/tracking-plan.json"><b>Tracking plan</b><span>Events, person attributes and the UTM rules. The checker enforces it.</span></a>
+    <a class="card" href="https://github.com/holmes0104/signup-to-pipeline/blob/main/work-sample/preflight/SKILL.md"><b>Claude skill</b><span>Runs the checker, makes the judgement checks a script cannot, writes the sign-off note. Also a training note for the team.</span></a>
+    <a class="card" href="https://github.com/holmes0104/signup-to-pipeline"><b>Source on GitHub</b><span>Python checker, modular email templates, test-event script, and this page.</span></a>
+  </div>
+  <p class="note">What this is not: it has not run in Xweather's systems, and how their tools connect is unknown to me. The replay shows one reasonable design. These are the first things I would ask: where lead scoring lives, how product usage reaches Customer.io, and which sync writes to Salesforce.</p>
+</section>
+
+<footer>
+  Thanh Nguyen (Holmes) · <a href="https://holmesnguyen.info">holmesnguyen.info</a> · Built November 2026 with Claude Code, at my direction.
+</footer>
+</div>
+<script src="data.js"></script>
+<script src="replay.js"></script>
+<script src="preflight.js"></script>
+</body>
+</html>

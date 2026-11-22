@@ -1,0 +1,50 @@
+{
+  "_note": "Sample tracking plan for a fictional webinar nurture. Synthetic data, not Xweather's real schema. Event names use snake_case, past tense. Every event and attribute used in a message must be listed here; the preflight checker enforces that.",
+  "utm_convention": {
+    "required": ["utm_source", "utm_medium", "utm_campaign"],
+    "fixed": {"utm_source": "customerio", "utm_medium": "email"},
+    "utm_campaign": "{campaign_id}",
+    "utm_content": "{message_id}",
+    "rules": "lowercase; letters, digits, hyphens and underscores only; no UTM tags on unsubscribe, preference or mailto links"
+  },
+  "person_attributes": {
+    "email": {"type": "string", "example": "anna.virtanen@example.com"},
+    "first_name": {"type": "string", "example": "Anna"},
+    "company": {"type": "string", "example": "Example Wind Oy"},
+    "industry": {"type": "string", "enum": ["energy", "aviation", "roads", "insurance", "other"], "example": "energy"},
+    "country": {"type": "string", "example": "FI"},
+    "consent_marketing_email": {"type": "boolean", "example": true, "note": "Set by the web form or preference centre; synced to Salesforce"},
+    "salesforce_lead_id": {"type": "string", "example": "00Q5g00000AbCdE"},
+    "lifecycle_stage": {"type": "string", "enum": ["subscriber", "lead", "mql", "sql", "customer"], "example": "lead"}
+  },
+  "events": {
+    "webinar_registered": {
+      "source": "webinar platform via Segment",
+      "properties": {
+        "webinar_id": {"type": "string", "example": "wx-wind-2026-12"},
+        "webinar_title": {"type": "string", "example": "Wind forecasts for operators: from data to dispatch"},
+        "webinar_start_at": {"type": "timestamp", "example": "2026-12-10T13:00:00Z"},
+        "join_url": {"type": "string", "example": "https://webinar.example.com/j/123"}
+      }
+    },
+    "webinar_attended": {
+      "source": "webinar platform via Segment",
+      "properties": {
+        "webinar_id": {"type": "string", "example": "wx-wind-2026-12"},
+        "minutes_watched": {"type": "integer", "example": 41}
+      }
+    },
+    "webinar_missed": {
+      "source": "webinar platform via Segment (registered, did not join)",
+      "properties": {
+        "webinar_id": {"type": "string", "example": "wx-wind-2026-12"}
+      }
+    },
+    "recording_viewed": {
+      "source": "website via Segment",
+      "properties": {
+        "webinar_id": {"type": "string", "example": "wx-wind-2026-12"}
+      }
+    }
+  }
+}
